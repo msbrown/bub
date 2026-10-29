@@ -136,23 +136,33 @@ async function sendBubbleTrigger() {
 }
 
 async function getLocationString() {
+    // Attempt 1: ipapi.co
     try {
-        // Free JSON IP geolocation endpoint (supports HTTPS)
-        let response = await fetch('https://ipapi.co/json/');
-        if (!response.ok) throw new Error('Network error');
-        let data = await response.json();
-        
-        // Build a short location tag like "NYC, US" or "Austin, TX"
-        let city = data.city || '';
-        let region = data.region_code || data.country_code || '';
-        
-        if (city && region) return `${city}, ${region}`;
-        if (city) return city;
-        if (region) return region;
-        return '';
-    } catch (err) {
-        console.warn('Location lookup failed:', err);
-        return ''; // Fallback gracefully if blocked by ad-blocker or network error
+        let res = await fetch('https://ipapi.co/json/');
+        if (res.ok) {
+            let data = await res.json();
+            let city = data.city || '';
+            let region = (data.region_code && data.region_code.length <= 3) ? data.region_code : (data.country_code || '');
+            if (city && region) return `${city}, ${region}`;
+            if (city) return city;
+        }
+    } catch (e) {
+        console.warn('ipapi.co failed, trying ip-api.com fallback...', e);
     }
-}
 
+    // Attempt 2: ip-api.com fallback
+    try {
+        let res = await fetch('https://ip-api.com/json/');
+        if (res.ok) {
+            let data = await res.json();
+            let city = data.city || '';
+            let region = data.region || data.countryCode || '';
+            if (city && region) return `${city}, ${region}`;
+            if (city) return city;
+        }
+    } catch (e) {
+        console.warn('Fallback location lookup failed:', e);
+    }
+
+    return '';
+}
