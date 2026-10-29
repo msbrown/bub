@@ -23,7 +23,7 @@ function setup() {
     canvas.parent('main');
 
     // Label for optional message
-    inputLabel = createP('Add an optional message (max 32 characters):');
+    inputLabel = createP('Add an optional message (max 30 characters):');
     inputLabel.parent('main');
     inputLabel.style('color', '#ffffff');
     inputLabel.style('margin', '10px 0 5px 0');
@@ -32,7 +32,7 @@ function setup() {
     // Create input box with 32-character limit
     msgInput = createInput('');
     msgInput.attribute('placeholder', 'Type message here...');
-    msgInput.attribute('maxlength', '32'); // Enforces 32 char max in HTML
+    msgInput.attribute('maxlength', '30'); // Enforces 30 char max in HTML
     msgInput.parent('main');
     msgInput.style('display', 'block');
     msgInput.style('padding', '8px');
