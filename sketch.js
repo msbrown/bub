@@ -136,33 +136,57 @@ async function sendBubbleTrigger() {
 }
 
 async function getLocationString() {
-    // Attempt 1: ipapi.co
+    // Primary: ipwho.is (HTTPS, free, clean output)
+    try {
+        let res = await fetch('https://ipwho.is/');
+        if (res.ok) {
+            let data = await res.json();
+            if (data.success) {
+                let city = data.city || '';
+                // Prefer 2-3 character region code (e.g. DC, VA, NY), fallback to country code
+                let region = (data.region_code && isNaN(data.region_code)) 
+                             ? data.region_code 
+                             : (data.country_code || '');
+                if (city && region) return `${city}, ${region}`;
+                if (city) return city;
+            }
+        }
+    } catch (e) {
+        console.warn('ipwho.is lookup failed:', e);
+    }
+
+    // Backup: ipinfo.io (HTTPS, free tier)
+    try {
+        let res = await fetch('https://ipinfo.io/json');
+        if (res.ok) {
+            let data = await res.json();
+            let city = data.city || '';
+            let region = data.region || data.country || '';
+            // If region is long (like "District of Columbia"), shorten common ones or use city + country
+            if (region === "District of Columbia") region = "DC";
+            if (city && region) return `${city}, ${region}`;
+            if (city) return city;
+        }
+    } catch (e) {
+        console.warn('ipinfo.io lookup failed:', e);
+    }
+
+    // Fallback: ipapi.co (Filtered against single-digit region codes like "1")
     try {
         let res = await fetch('https://ipapi.co/json/');
         if (res.ok) {
             let data = await res.json();
             let city = data.city || '';
-            let region = (data.region_code && data.region_code.length <= 3) ? data.region_code : (data.country_code || '');
+            // Ignore numeric region_code (e.g. "1") and use state/country code
+            let region = (data.region_code && isNaN(data.region_code)) 
+                         ? data.region_code 
+                         : (data.country_code || '');
             if (city && region) return `${city}, ${region}`;
             if (city) return city;
         }
     } catch (e) {
-        console.warn('ipapi.co failed, trying ip-api.com fallback...', e);
+        console.warn('ipapi.co lookup failed:', e);
     }
 
-    // Attempt 2: ip-api.com fallback
-    try {
-        let res = await fetch('https://ip-api.com/json/');
-        if (res.ok) {
-            let data = await res.json();
-            let city = data.city || '';
-            let region = data.region || data.countryCode || '';
-            if (city && region) return `${city}, ${region}`;
-            if (city) return city;
-        }
-    } catch (e) {
-        console.warn('Fallback location lookup failed:', e);
-    }
-
-    return '';
+    return ''; // Returns empty string gracefully if all fail
 }
