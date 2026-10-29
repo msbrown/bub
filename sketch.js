@@ -103,27 +103,56 @@ function draw() {
     }
 }
 
-function sendBubbleTrigger() {
+async function sendBubbleTrigger() {
     if (!client || !client.isConnected()) {
         alert('MQTT is not connected yet!');
         return;
     }
 
-    let extraText = msgInput.value().trim();
-    // Ensure payload does not exceed 32 extra chars
-    if (extraText.length > 32) {
-        extraText = extraText.substring(0, 32);
+    // 1. Get raw text typed by user
+    let userText = msgInput.value().trim();
+    if (userText.length > 30) userText = userText.substring(0, 30);
+
+    // 2. Fetch location string (e.g. "NYC, US")
+    let locStr = await getLocationString();
+    if (locStr.length > 30) locStr = locStr.substring(0, 30);
+
+    // 4. Format: "trigger: User Message | Location"
+    let payload = "trigger";
+    if (userText.length > 0 || locStr.length > 0) {
+        payload += `: ${userText}|${locStr}`;
     }
-
-    let payload = extraText.length > 0 ? `trigger: ${extraText}` : 'trigger';
-
+    
+    // 5. Send MQTT message
     let msg = new Paho.MQTT.Message(payload);
     msg.destinationName = topic;
     client.send(msg);
 
-    // Play GIF and start 8-second timer
+    // 6. Start visual GIF timer
     isBubbling = true;
-    bubbleGif.attribute('src', 'assets/bubbles.gif?t=' + millis()); // Force GIF restart from frame 0
+    bubbleGif.attribute('src', 'assets/bubbles.gif?t=' + millis());
     bubbleGif.show();
     bubbleTimer = millis();
 }
+
+async function getLocationString() {
+    try {
+        // Free JSON IP geolocation endpoint (supports HTTPS)
+        let response = await fetch('https://ipapi.co/json/');
+        if (!response.ok) throw new Error('Network error');
+        let data = await response.json();
+        
+        // Build a short location tag like "NYC, US" or "Austin, TX"
+        let city = data.city || '';
+        let region = data.region_code || data.country_code || '';
+        
+        if (city && region) return `${city}, ${region}`;
+        if (city) return city;
+        if (region) return region;
+        return '';
+    } catch (err) {
+        console.warn('Location lookup failed:', err);
+        return ''; // Fallback gracefully if blocked by ad-blocker or network error
+    }
+}
+
