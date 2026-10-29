@@ -2,39 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Frog Bubble Trigger</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frog Bubble Machine</title>
+
+    <!-- p5.js and Paho MQTT Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    
+    <!-- Link to your p5 sketch -->
+    <script src="sketch.js"></script>
+
     <style>
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
-        button { padding: 20px 40px; font-size: 20px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px; }
-        button:hover { background-color: #45a049; }
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #main {
+            margin-top: 10px;
+        }
+        #status {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
-
-    <button id="bubbleBtn">Trigger Bubbles</button>
-
-    <!-- Paho MQTT Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
-    <script>
-        // Setup client
-        const client = new Paho.MQTT.Client("public.cloud.shiftr.io", 443, "frog-web-client");
-        
-        // Handle connection success/failure
-        client.connect({
-            useSSL: true,
-            userName: "public",
-            password: "public",
-            onSuccess: () => console.log("Connected to Shiftr.io!"),
-            onFailure: (err) => console.error("Failed to connect: ", err)
-        });
-
-        // Button action
-        document.getElementById("bubbleBtn").onclick = () => {
-            const msg = new Paho.MQTT.Message("trigger");
-            msg.destinationName = "wavy-tubular";
-            client.send(msg);
-            console.log("Sent: trigger to wavy-tubular");
-        };
-    </script>
+    <h1>🐸 Frog Bubble Trigger</h1>
+    <div id="status">Connecting to MQTT...</div>
+    <div id="main"></div>
 </body>
 </html>
