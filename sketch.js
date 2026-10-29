@@ -13,9 +13,9 @@ let sendBtn;
 let inputLabel;
 
 function preload() {
-    // Load local GIF asset from assets folder
+    // Create the image hidden by default via inline CSS style
     bubbleGif = createImg('assets/bubbles.gif', 'Bubbles Animation');
-    bubbleGif.hide();
+    bubbleGif.style('display', 'none'); 
 }
 
 function setup() {
@@ -51,9 +51,9 @@ function setup() {
     sendBtn.style('cursor', 'pointer');
     sendBtn.mousePressed(sendBubbleTrigger);
 
-    // Place GIF inside main container under controls
+    // Attach GIF to main container and ensure it is hidden on startup
     bubbleGif.parent('main');
-    bubbleGif.style('display', 'block');
+    bubbleGif.hide();
     bubbleGif.style('margin-top', '15px');
     bubbleGif.style('width', '300px');
 
