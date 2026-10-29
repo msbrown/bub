@@ -10,31 +10,39 @@ let isBubbling = false;
 let bubbleTimer = 0;
 let msgInput;
 let sendBtn;
+let inputLabel;
 
 function preload() {
-    // Load local GIF asset
+    // Load local GIF asset from assets folder
     bubbleGif = createImg('assets/bubbles.gif', 'Bubbles Animation');
     bubbleGif.hide();
 }
 
 function setup() {
-    let canvas = createCanvas(400, 300);
+    let canvas = createCanvas(400, 100);
     canvas.parent('main');
 
-    // Create input box using p5 DOM
+    // Label for optional message
+    inputLabel = createP('Add an optional message (max 32 characters):');
+    inputLabel.parent('main');
+    inputLabel.style('color', '#ffffff');
+    inputLabel.style('margin', '10px 0 5px 0');
+    inputLabel.style('font-size', '14px');
+
+    // Create input box with 32-character limit
     msgInput = createInput('');
-    msgInput.attribute('placeholder', 'Optional message for LCD...');
+    msgInput.attribute('placeholder', 'Type message here...');
+    msgInput.attribute('maxlength', '32'); // Enforces 32 char max in HTML
     msgInput.parent('main');
     msgInput.style('display', 'block');
-    msgInput.style('margin', '10px auto');
     msgInput.style('padding', '8px');
-    msgInput.style('width', '280px');
+    msgInput.style('width', '300px');
+    msgInput.style('margin-bottom', '10px');
 
-    // Create button using p5 DOM
+    // Create trigger button
     sendBtn = createButton('Blow Bubbles! 🫧');
     sendBtn.parent('main');
     sendBtn.style('display', 'block');
-    sendBtn.style('margin', '0 auto 15px auto');
     sendBtn.style('padding', '10px 20px');
     sendBtn.style('background-color', '#4CAF50');
     sendBtn.style('color', 'white');
@@ -42,6 +50,12 @@ function setup() {
     sendBtn.style('border-radius', '5px');
     sendBtn.style('cursor', 'pointer');
     sendBtn.mousePressed(sendBubbleTrigger);
+
+    // Place GIF inside main container under controls
+    bubbleGif.parent('main');
+    bubbleGif.style('display', 'block');
+    bubbleGif.style('margin-top', '15px');
+    bubbleGif.style('width', '300px');
 
     // Initialize MQTT
     client = new Paho.MQTT.Client(broker.hostname, Number(broker.port), creds.clientID);
@@ -70,22 +84,20 @@ function draw() {
     background(30);
 
     if (isBubbling) {
-        // Display GIF centered on canvas
-        image(bubbleGif, 50, 20, 300, 220);
-        
         fill(76, 175, 80);
-        textAlign(CENTER);
+        textAlign(CENTER, CENTER);
         textSize(18);
-        text("Blowing Bubbles! 🫧", width / 2, 270);
+        text("Blowing Bubbles! 🫧", width / 2, height / 2);
 
-        // Hide GIF after 7 seconds
-        if (millis() - bubbleTimer > 7000) {
+        // Hide GIF and reset page state after 8 seconds (8000 ms)
+        if (millis() - bubbleTimer > 8000) {
             isBubbling = false;
             bubbleGif.hide();
+            msgInput.value(''); // Reset input text field
         }
     } else {
         fill(150);
-        textAlign(CENTER);
+        textAlign(CENTER, CENTER);
         textSize(16);
         text("Ready. Click button to trigger!", width / 2, height / 2);
     }
@@ -98,15 +110,20 @@ function sendBubbleTrigger() {
     }
 
     let extraText = msgInput.value().trim();
+    // Ensure payload does not exceed 32 extra chars
+    if (extraText.length > 32) {
+        extraText = extraText.substring(0, 32);
+    }
+
     let payload = extraText.length > 0 ? `trigger: ${extraText}` : 'trigger';
 
     let msg = new Paho.MQTT.Message(payload);
     msg.destinationName = topic;
     client.send(msg);
 
-    // Trigger visual GIF animation in p5
+    // Play GIF and start 8-second timer
     isBubbling = true;
+    bubbleGif.attribute('src', 'assets/bubbles.gif?t=' + millis()); // Force GIF restart from frame 0
     bubbleGif.show();
-    bubbleGif.position(canvas.offsetLeft + 50, canvas.offsetTop + 20);
     bubbleTimer = millis();
 }
