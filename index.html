@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Frog Bubble Trigger</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+        button { padding: 20px 40px; font-size: 20px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px; }
+        button:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+
+    <button id="bubbleBtn">Trigger Bubbles</button>
+
+    <!-- Paho MQTT Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <script>
+        // Setup client
+        const client = new Paho.MQTT.Client("public.cloud.shiftr.io", 443, "frog-web-client");
+        
+        // Handle connection success/failure
+        client.connect({
+            useSSL: true,
+            userName: "public",
+            password: "public",
+            onSuccess: () => console.log("Connected to Shiftr.io!"),
+            onFailure: (err) => console.error("Failed to connect: ", err)
+        });
+
+        // Button action
+        document.getElementById("bubbleBtn").onclick = () => {
+            const msg = new Paho.MQTT.Message("trigger");
+            msg.destinationName = "wavy-tubular";
+            client.send(msg);
+            console.log("Sent: trigger to wavy-tubular");
+        };
+    </script>
+</body>
+</html>
